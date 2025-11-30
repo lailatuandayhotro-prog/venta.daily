@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      session_staff: {
+        Row: {
+          id: string
+          session_id: string
+          staff_id: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          staff_id: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_staff_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "work_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_staff_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      work_sessions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          notes: string | null
+          product_category: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          time_slot: Database["public"]["Enums"]["time_slot"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          notes?: string | null
+          product_category: string
+          session_type?: Database["public"]["Enums"]["session_type"]
+          time_slot: Database["public"]["Enums"]["time_slot"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          product_category?: string
+          session_type?: Database["public"]["Enums"]["session_type"]
+          time_slot?: Database["public"]["Enums"]["time_slot"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +124,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      session_type: "livestream" | "video" | "event"
+      time_slot: "sáng" | "chiều" | "tối"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +252,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      session_type: ["livestream", "video", "event"],
+      time_slot: ["sáng", "chiều", "tối"],
+    },
   },
 } as const
