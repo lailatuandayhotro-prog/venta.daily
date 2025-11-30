@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { WorkSession, SessionType, TimeSlot, PRODUCT_CATEGORIES, DEFAULT_STAFF, SESSION_TYPE_LABELS, TIME_SLOT_LABELS } from '@/types/session';
+import { WorkSession } from '@/hooks/useWorkSessions';
+import { useStaff } from '@/hooks/useStaff';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,29 +9,61 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 
+type TimeSlot = 'sáng' | 'chiều' | 'tối';
+type SessionType = 'livestream' | 'video' | 'event';
+
+const TIME_SLOT_LABELS: Record<TimeSlot, string> = {
+  'sáng': 'Sáng',
+  'chiều': 'Chiều',
+  'tối': 'Tối',
+};
+
+const SESSION_TYPE_LABELS: Record<SessionType, string> = {
+  livestream: 'Livestream',
+  video: 'Quay video',
+  event: 'Sự kiện',
+};
+
+const PRODUCT_CATEGORIES = [
+  'Nước hoa',
+  'Quần áo',
+  'Rong biển',
+  'Mỹ phẩm',
+  'Phụ kiện',
+  'Thực phẩm',
+  'Khác',
+];
+
 interface SessionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (session: Omit<WorkSession, 'id' | 'createdAt'>) => void;
+  onSubmit: (session: {
+    date: string;
+    time_slot: TimeSlot;
+    product_category: string;
+    session_type: SessionType;
+    notes?: string;
+    staff_ids: string[];
+  }) => void;
   editSession?: WorkSession | null;
 }
 
 export function SessionForm({ open, onOpenChange, onSubmit, editSession }: SessionFormProps) {
+  const { activeStaff } = useStaff();
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('chiều');
-  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
   const [productCategory, setProductCategory] = useState(PRODUCT_CATEGORIES[0]);
   const [sessionType, setSessionType] = useState<SessionType>('livestream');
   const [notes, setNotes] = useState('');
-  const [customStaff, setCustomStaff] = useState('');
 
   useEffect(() => {
     if (editSession) {
       setDate(editSession.date);
-      setTimeSlot(editSession.timeSlot);
-      setSelectedStaff(editSession.staffNames);
-      setProductCategory(editSession.productCategory);
-      setSessionType(editSession.sessionType);
+      setTimeSlot(editSession.time_slot);
+      setSelectedStaffIds(editSession.staff_ids);
+      setProductCategory(editSession.product_category);
+      setSessionType(editSession.session_type);
       setNotes(editSession.notes || '');
     } else {
       resetForm();
@@ -40,38 +73,30 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession }: Sessi
   const resetForm = () => {
     setDate(format(new Date(), 'yyyy-MM-dd'));
     setTimeSlot('chiều');
-    setSelectedStaff([]);
+    setSelectedStaffIds([]);
     setProductCategory(PRODUCT_CATEGORIES[0]);
     setSessionType('livestream');
     setNotes('');
-    setCustomStaff('');
   };
 
-  const toggleStaff = (name: string) => {
-    setSelectedStaff(prev => 
-      prev.includes(name) 
-        ? prev.filter(n => n !== name)
-        : [...prev, name]
+  const toggleStaff = (id: string) => {
+    setSelectedStaffIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
     );
-  };
-
-  const addCustomStaff = () => {
-    if (customStaff.trim() && !selectedStaff.includes(customStaff.trim())) {
-      setSelectedStaff(prev => [...prev, customStaff.trim()]);
-      setCustomStaff('');
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedStaff.length === 0) return;
+    if (selectedStaffIds.length === 0) return;
 
     onSubmit({
       date,
-      timeSlot,
-      staffNames: selectedStaff,
-      productCategory,
-      sessionType,
+      time_slot: timeSlot,
+      staff_ids: selectedStaffIds,
+      product_category: productCategory,
+      session_type: sessionType,
       notes: notes.trim() || undefined,
     });
 
@@ -118,35 +143,27 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession }: Sessi
           <div className="space-y-2">
             <Label>Nhân viên</Label>
             <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg">
-              {DEFAULT_STAFF.map((staff) => (
-                <label
-                  key={staff.id}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-all ${
-                    selectedStaff.includes(staff.name)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background hover:bg-muted'
-                  }`}
-                >
-                  <Checkbox
-                    checked={selectedStaff.includes(staff.name)}
-                    onCheckedChange={() => toggleStaff(staff.name)}
-                    className="hidden"
-                  />
-                  <span className="font-medium text-sm">{staff.name}</span>
-                </label>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <Input
-                placeholder="Thêm nhân viên khác..."
-                value={customStaff}
-                onChange={(e) => setCustomStaff(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomStaff())}
-                className="flex-1 bg-muted/50"
-              />
-              <Button type="button" variant="secondary" onClick={addCustomStaff}>
-                Thêm
-              </Button>
+              {activeStaff.length === 0 ? (
+                <p className="text-muted-foreground text-sm">Chưa có nhân viên. Vui lòng thêm nhân viên trước.</p>
+              ) : (
+                activeStaff.map((staff) => (
+                  <label
+                    key={staff.id}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-all ${
+                      selectedStaffIds.includes(staff.id)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background hover:bg-muted'
+                    }`}
+                  >
+                    <Checkbox
+                      checked={selectedStaffIds.includes(staff.id)}
+                      onCheckedChange={() => toggleStaff(staff.id)}
+                      className="hidden"
+                    />
+                    <span className="font-medium text-sm">{staff.name}</span>
+                  </label>
+                ))
+              )}
             </div>
           </div>
 
@@ -196,7 +213,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession }: Sessi
             </Button>
             <Button 
               type="submit" 
-              disabled={selectedStaff.length === 0}
+              disabled={selectedStaffIds.length === 0}
               className="gradient-primary text-primary-foreground font-semibold"
             >
               {editSession ? 'Cập nhật' : 'Đăng ký'}

@@ -1,4 +1,4 @@
-import { WorkSession } from '@/types/session';
+import { WorkSession } from '@/hooks/useWorkSessions';
 import { Video, Radio, Calendar, Users } from 'lucide-react';
 
 interface StatsCardsProps {
@@ -7,9 +7,9 @@ interface StatsCardsProps {
 
 export function StatsCards({ sessions }: StatsCardsProps) {
   const totalSessions = sessions.length;
-  const livestreamCount = sessions.filter(s => s.sessionType === 'livestream').length;
-  const videoCount = sessions.filter(s => s.sessionType === 'video').length;
-  const uniqueStaff = new Set(sessions.flatMap(s => s.staffNames)).size;
+  const livestreamCount = sessions.filter(s => s.session_type === 'livestream').length;
+  const videoCount = sessions.filter(s => s.session_type === 'video').length;
+  const uniqueStaff = new Set(sessions.flatMap(s => s.staff_names)).size;
 
   const stats = [
     { 

@@ -1,9 +1,15 @@
-import { useState } from 'react';
-import { DEFAULT_STAFF, SESSION_TYPE_LABELS, SessionType } from '@/types/session';
+import { useState, useEffect } from 'react';
+import { useStaff } from '@/hooks/useStaff';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Search, X } from 'lucide-react';
+
+const SESSION_TYPE_LABELS = {
+  livestream: 'Livestream',
+  video: 'Quay video',
+  event: 'Sự kiện',
+};
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterState) => void;
@@ -18,6 +24,7 @@ export interface FilterState {
 }
 
 export function FilterBar({ onFilterChange }: FilterBarProps) {
+  const { staff } = useStaff();
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     staff: 'all',
@@ -65,8 +72,8 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tất cả</SelectItem>
-            {DEFAULT_STAFF.map((staff) => (
-              <SelectItem key={staff.id} value={staff.name}>{staff.name}</SelectItem>
+            {staff.map((s) => (
+              <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
