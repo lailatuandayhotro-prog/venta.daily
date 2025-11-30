@@ -1,15 +1,18 @@
-import { useState, useMemo } from 'react';
-import { useWorkSessions } from '@/hooks/useWorkSessions';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useWorkSessions, WorkSession } from '@/hooks/useWorkSessions';
 import { SessionTable } from '@/components/SessionTable';
 import { SessionForm } from '@/components/SessionForm';
 import { FilterBar, FilterState } from '@/components/FilterBar';
 import { StatsCards } from '@/components/StatsCards';
 import { Button } from '@/components/ui/button';
-import { WorkSession } from '@/types/session';
-import { Plus, Radio } from 'lucide-react';
+import { Plus, Radio, Users, LogOut, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, signOut } = useAuth();
   const { sessions, isLoading, addSession, updateSession, deleteSession } = useWorkSessions();
   const [formOpen, setFormOpen] = useState(false);
   const [editSession, setEditSession] = useState<WorkSession | null>(null);
@@ -21,25 +24,32 @@ const Index = () => {
     dateTo: '',
   });
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
   const filteredSessions = useMemo(() => {
     return sessions.filter(session => {
       // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesSearch = 
-          session.staffNames.some(n => n.toLowerCase().includes(searchLower)) ||
-          session.productCategory.toLowerCase().includes(searchLower) ||
+          session.staff_names.some(n => n.toLowerCase().includes(searchLower)) ||
+          session.product_category.toLowerCase().includes(searchLower) ||
           session.notes?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
 
       // Staff filter
-      if (filters.staff !== 'all' && !session.staffNames.includes(filters.staff)) {
+      if (filters.staff !== 'all' && !session.staff_names.includes(filters.staff)) {
         return false;
       }
 
       // Session type filter
-      if (filters.sessionType !== 'all' && session.sessionType !== filters.sessionType) {
+      if (filters.sessionType !== 'all' && session.session_type !== filters.sessionType) {
         return false;
       }
 
@@ -55,15 +65,22 @@ const Index = () => {
     });
   }, [sessions, filters]);
 
-  const handleSubmit = (sessionData: Omit<WorkSession, 'id' | 'createdAt'>) => {
+  const handleSubmit = async (sessionData: {
+    date: string;
+    time_slot: 'sáng' | 'chiều' | 'tối';
+    product_category: string;
+    session_type: 'livestream' | 'video' | 'event';
+    notes?: string;
+    staff_ids: string[];
+  }) => {
     if (editSession) {
-      updateSession(editSession.id, sessionData);
+      await updateSession(editSession.id, sessionData);
       toast({
         title: 'Đã cập nhật',
         description: 'Phiên đã được cập nhật thành công.',
       });
     } else {
-      addSession(sessionData);
+      await addSession(sessionData);
       toast({
         title: 'Đã đăng ký',
         description: 'Phiên mới đã được đăng ký thành công.',
@@ -77,8 +94,8 @@ const Index = () => {
     setFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    deleteSession(id);
+  const handleDelete = async (id: string) => {
+    await deleteSession(id);
     toast({
       title: 'Đã xóa',
       description: 'Phiên đã được xóa thành công.',
@@ -89,6 +106,19 @@ const Index = () => {
     setFormOpen(open);
     if (!open) setEditSession(null);
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,13 +135,30 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Chấm công Livestream & Quay video</p>
               </div>
             </div>
-            <Button 
-              onClick={() => setFormOpen(true)}
-              className="gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Đăng ký phiên
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/staff')}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Nhân viên
+              </Button>
+              <Button 
+                onClick={() => setFormOpen(true)}
+                className="gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Đăng ký phiên
+              </Button>
+              <Button 
+                variant="ghost"
+                size="icon"
+                onClick={handleSignOut}
+                title="Đăng xuất"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>

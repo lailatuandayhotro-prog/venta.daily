@@ -1,9 +1,15 @@
-import { WorkSession, TIME_SLOT_LABELS, SESSION_TYPE_LABELS } from '@/types/session';
+import { WorkSession } from '@/hooks/useWorkSessions';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+
+const SESSION_TYPE_LABELS = {
+  livestream: 'Livestream',
+  video: 'Quay video',
+  event: 'Sự kiện',
+};
 
 interface SessionTableProps {
   sessions: WorkSession[];
@@ -16,7 +22,7 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
     const dateCompare = new Date(b.date).getTime() - new Date(a.date).getTime();
     if (dateCompare !== 0) return dateCompare;
     const timeOrder = { 'sáng': 0, 'chiều': 1, 'tối': 2 };
-    return timeOrder[a.timeSlot] - timeOrder[b.timeSlot];
+    return timeOrder[a.time_slot] - timeOrder[b.time_slot];
   });
 
   const formatDate = (dateStr: string, timeSlot: string) => {
@@ -55,12 +61,12 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
             >
               <td className="py-4 px-4">
                 <span className="font-medium text-foreground">
-                  {formatDate(session.date, session.timeSlot)}
+                  {formatDate(session.date, session.time_slot)}
                 </span>
               </td>
               <td className="py-4 px-4">
                 <div className="flex flex-wrap gap-1">
-                  {session.staffNames.map((name, i) => (
+                  {session.staff_names.map((name, i) => (
                     <Badge key={i} variant="secondary" className="font-medium">
                       {name}
                     </Badge>
@@ -68,7 +74,7 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
                 </div>
               </td>
               <td className="py-4 px-4">
-                <span className="text-foreground">{session.productCategory}</span>
+                <span className="text-foreground">{session.product_category}</span>
                 {session.notes && (
                   <span className="text-muted-foreground text-sm ml-2">({session.notes})</span>
                 )}
@@ -78,7 +84,7 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
                   variant="outline" 
                   className="border-primary/30 text-primary bg-primary/5"
                 >
-                  {SESSION_TYPE_LABELS[session.sessionType]}
+                  {SESSION_TYPE_LABELS[session.session_type]}
                 </Badge>
               </td>
               <td className="py-4 px-4 text-right">
