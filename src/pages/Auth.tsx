@@ -93,7 +93,7 @@ const Auth = () => {
               <Radio className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">LiveTrack</CardTitle>
+          <CardTitle className="text-2xl">Venta</CardTitle>
           <CardDescription>Chấm công Livestream & Quay video</CardDescription>
         </CardHeader>
         <CardContent>
