@@ -1,18 +1,21 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkSessions, WorkSession } from '@/hooks/useWorkSessions';
 import { SessionTable } from '@/components/SessionTable';
 import { SessionForm } from '@/components/SessionForm';
 import { FilterBar, FilterState } from '@/components/FilterBar';
 import { StatsCards } from '@/components/StatsCards';
 import { Button } from '@/components/ui/button';
-import { Plus, Radio, Users, LogOut, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Radio, Users, LogOut, Loader2, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, signOut } = useAuth();
+  const { role, isLoading: roleLoading, getRoleLabel, isManager } = useUserRole();
   const { sessions, isLoading, addSession, updateSession, deleteSession } = useWorkSessions();
   const [formOpen, setFormOpen] = useState(false);
   const [editSession, setEditSession] = useState<WorkSession | null>(null);
@@ -131,9 +134,15 @@ const Index = () => {
                 <Radio className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">LiveTrack</h1>
+                <h1 className="text-xl font-bold text-foreground">Venta</h1>
                 <p className="text-sm text-muted-foreground">Chấm công Livestream & Quay video</p>
               </div>
+              {role && !roleLoading && (
+                <Badge variant="secondary" className="ml-2">
+                  <Shield className="h-3 w-3 mr-1" />
+                  {getRoleLabel(role)}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Button 
