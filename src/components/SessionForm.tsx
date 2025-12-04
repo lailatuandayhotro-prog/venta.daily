@@ -46,11 +46,12 @@ interface SessionFormProps {
     staff_ids: string[];
   }) => void;
   editSession?: WorkSession | null;
+  defaultDate?: string;
 }
 
-export function SessionForm({ open, onOpenChange, onSubmit, editSession }: SessionFormProps) {
+export function SessionForm({ open, onOpenChange, onSubmit, editSession, defaultDate }: SessionFormProps) {
   const { activeStaff } = useStaff();
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [date, setDate] = useState(defaultDate || format(new Date(), 'yyyy-MM-dd'));
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('chiều');
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
   const [productCategory, setProductCategory] = useState(PRODUCT_CATEGORIES[0]);
@@ -70,8 +71,14 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession }: Sessi
     }
   }, [editSession, open]);
 
+  useEffect(() => {
+    if (!editSession && defaultDate) {
+      setDate(defaultDate);
+    }
+  }, [defaultDate, editSession]);
+
   const resetForm = () => {
-    setDate(format(new Date(), 'yyyy-MM-dd'));
+    setDate(defaultDate || format(new Date(), 'yyyy-MM-dd'));
     setTimeSlot('chiều');
     setSelectedStaffIds([]);
     setProductCategory(PRODUCT_CATEGORIES[0]);
@@ -109,7 +116,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession }: Sessi
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            {editSession ? 'Chỉnh sửa phiên' : 'Đăng ký phiên mới'}
+            {editSession ? 'Chỉnh sửa task' : 'Phân công task mới'}
           </DialogTitle>
         </DialogHeader>
         
@@ -216,7 +223,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession }: Sessi
               disabled={selectedStaffIds.length === 0}
               className="gradient-primary text-primary-foreground font-semibold"
             >
-              {editSession ? 'Cập nhật' : 'Đăng ký'}
+              {editSession ? 'Cập nhật' : 'Phân công'}
             </Button>
           </DialogFooter>
         </form>
