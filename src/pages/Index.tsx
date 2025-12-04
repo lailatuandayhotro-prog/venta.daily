@@ -9,7 +9,7 @@ import { FilterBar, FilterState } from '@/components/FilterBar';
 import { StatsCards } from '@/components/StatsCards';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radio, Users, LogOut, Loader2, Shield } from 'lucide-react';
+import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -153,13 +153,20 @@ const Index = () => {
                 Nhân viên
               </Button>
               <Button 
+                variant="outline"
+                onClick={() => navigate('/attendance')}
+              >
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Chấm công
+              </Button>
+              <Button 
                 onClick={() => setFormOpen(true)}
                 className="gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Đăng ký phiên
+                Phân công
               </Button>
-              <Button 
+              <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
