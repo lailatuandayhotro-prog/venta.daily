@@ -6,10 +6,13 @@ import { useWorkSessions, WorkSession } from '@/hooks/useWorkSessions';
 import { SessionTable } from '@/components/SessionTable';
 import { SessionForm } from '@/components/SessionForm';
 import { StatsCards } from '@/components/StatsCards';
+import { TodaySchedule } from '@/components/TodaySchedule';
+import { WeeklyAvailability } from '@/components/WeeklyAvailability';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList, Calendar, History, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList, Calendar, History, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -181,77 +184,124 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container py-6 space-y-6">
-        {/* Date Navigation */}
-        <div className="bg-card rounded-xl shadow-soft border border-border/50 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToPrevDay}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 min-w-[280px] justify-center">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium capitalize">{formatDisplayDate(selectedDate)}</span>
-                {isToday && (
-                  <Badge variant="default" className="ml-2">Hôm nay</Badge>
-                )}
+        <Tabs defaultValue="tasks" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="tasks" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Công việc hôm nay
+            </TabsTrigger>
+            <TabsTrigger value="availability" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              Lịch trống theo tuần
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab 1: Tasks */}
+          <TabsContent value="tasks" className="space-y-6">
+            {/* Today's Available Staff */}
+            <div className="bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Lịch làm việc của nhân viên hôm nay
+                </h2>
               </div>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={goToNextDay}
-                disabled={isToday}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="p-4">
+                <TodaySchedule />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {!isToday && (
-                <Button variant="outline" size="sm" onClick={goToToday}>
-                  <History className="h-4 w-4 mr-2" />
-                  Về hôm nay
-                </Button>
+
+            {/* Date Navigation */}
+            <div className="bg-card rounded-xl shadow-soft border border-border/50 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" onClick={goToPrevDay}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-2 min-w-[280px] justify-center">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium capitalize">{formatDisplayDate(selectedDate)}</span>
+                    {isToday && (
+                      <Badge variant="default" className="ml-2">Hôm nay</Badge>
+                    )}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={goToNextDay}
+                    disabled={isToday}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  {!isToday && (
+                    <Button variant="outline" size="sm" onClick={goToToday}>
+                      <History className="h-4 w-4 mr-2" />
+                      Về hôm nay
+                    </Button>
+                  )}
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setViewMode(e.target.value === format(new Date(), 'yyyy-MM-dd') ? 'today' : 'history');
+                    }}
+                    className="w-40"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Stats for selected date */}
+            <StatsCards sessions={filteredSessions} />
+
+            {/* Task Table */}
+            <div className="bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <h2 className="font-semibold text-foreground">
+                  Danh sách công việc {isToday ? 'hôm nay' : `ngày ${format(parseISO(selectedDate), 'dd/MM')}`}
+                </h2>
+              </div>
+              
+              {isLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+                </div>
+              ) : (
+                <SessionTable 
+                  sessions={filteredSessions} 
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                />
               )}
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  setViewMode(e.target.value === format(new Date(), 'yyyy-MM-dd') ? 'today' : 'history');
-                }}
-                className="w-40"
-              />
             </div>
-          </div>
-        </div>
 
-        {/* Stats for selected date */}
-        <StatsCards sessions={filteredSessions} />
+            {/* Results count */}
+            <p className="text-sm text-muted-foreground text-center">
+              {filteredSessions.length} task được phân công
+            </p>
+          </TabsContent>
 
-        {/* Task Table */}
-        <div className="bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground">
-              Danh sách công việc {isToday ? 'hôm nay' : `ngày ${format(parseISO(selectedDate), 'dd/MM')}`}
-            </h2>
-          </div>
-          
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+          {/* Tab 2: Weekly Availability */}
+          <TabsContent value="availability" className="space-y-6">
+            <div className="bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  Đăng ký lịch trống theo tuần
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Nhân viên có thể đánh dấu các buổi có thể đi làm trong tuần
+                </p>
+              </div>
+              <div className="p-4">
+                <WeeklyAvailability />
+              </div>
             </div>
-          ) : (
-            <SessionTable 
-              sessions={filteredSessions} 
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
-          )}
-        </div>
-
-        {/* Results count */}
-        <p className="text-sm text-muted-foreground text-center">
-          {filteredSessions.length} task được phân công
-        </p>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Form Dialog */}
