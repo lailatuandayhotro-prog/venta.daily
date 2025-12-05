@@ -80,6 +80,38 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          staff_id: string
+          time_slot: Database["public"]["Enums"]["time_slot"]
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          staff_id: string
+          time_slot: Database["public"]["Enums"]["time_slot"]
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          staff_id?: string
+          time_slot?: Database["public"]["Enums"]["time_slot"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_availability_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
