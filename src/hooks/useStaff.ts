@@ -8,6 +8,7 @@ export interface StaffMember {
   phone: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +72,34 @@ export function useStaff() {
     return { error };
   };
 
+  const linkUserToStaff = async (staffId: string, userId: string) => {
+    const { data, error } = await supabase
+      .from('staff')
+      .update({ user_id: userId })
+      .eq('id', staffId)
+      .select()
+      .single();
+    
+    if (!error && data) {
+      setStaff(prev => prev.map(s => s.id === staffId ? data : s));
+    }
+    return { data, error };
+  };
+
+  const unlinkUserFromStaff = async (staffId: string) => {
+    const { data, error } = await supabase
+      .from('staff')
+      .update({ user_id: null })
+      .eq('id', staffId)
+      .select()
+      .single();
+    
+    if (!error && data) {
+      setStaff(prev => prev.map(s => s.id === staffId ? data : s));
+    }
+    return { data, error };
+  };
+
   const activeStaff = staff.filter(s => s.is_active);
 
   return {
@@ -80,6 +109,8 @@ export function useStaff() {
     addStaff,
     updateStaff,
     deleteStaff,
+    linkUserToStaff,
+    unlinkUserFromStaff,
     refetch: fetchStaff,
   };
 }
