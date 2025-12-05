@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface StaffAvailability {
   id: string;
@@ -11,11 +12,14 @@ export interface StaffAvailability {
 export interface StaffWithAvailability {
   id: string;
   name: string;
+  user_id: string | null;
   availability: StaffAvailability[];
 }
 
 export function useStaffAvailability() {
+  const { user } = useAuth();
   const [staffAvailability, setStaffAvailability] = useState<StaffWithAvailability[]>([]);
+  const [currentStaff, setCurrentStaff] = useState<StaffWithAvailability | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAvailability = async () => {
@@ -24,7 +28,7 @@ export function useStaffAvailability() {
     // Get all staff
     const { data: staffData } = await supabase
       .from('staff')
-      .select('id, name')
+      .select('id, name, user_id')
       .eq('is_active', true)
       .order('name');
 
@@ -37,6 +41,7 @@ export function useStaffAvailability() {
       const mapped = staffData.map(staff => ({
         id: staff.id,
         name: staff.name,
+        user_id: staff.user_id,
         availability: (availabilityData || [])
           .filter(a => a.staff_id === staff.id)
           .map(a => ({
@@ -47,6 +52,12 @@ export function useStaffAvailability() {
           })),
       }));
       setStaffAvailability(mapped);
+      
+      // Find current user's staff record
+      if (user) {
+        const myStaff = mapped.find(s => s.user_id === user.id);
+        setCurrentStaff(myStaff || null);
+      }
     }
     
     setIsLoading(false);
@@ -54,13 +65,18 @@ export function useStaffAvailability() {
 
   useEffect(() => {
     fetchAvailability();
-  }, []);
+  }, [user]);
 
   const toggleAvailability = async (staffId: string, dayOfWeek: number, timeSlot: 'sáng' | 'chiều' | 'tối') => {
+    // Only allow toggling own availability
+    if (!currentStaff || currentStaff.id !== staffId) {
+      return;
+    }
+
     // Check if availability exists
-    const existing = staffAvailability
-      .find(s => s.id === staffId)
-      ?.availability.find(a => a.day_of_week === dayOfWeek && a.time_slot === timeSlot);
+    const existing = currentStaff.availability.find(
+      a => a.day_of_week === dayOfWeek && a.time_slot === timeSlot
+    );
 
     if (existing) {
       // Remove
@@ -84,6 +100,7 @@ export function useStaffAvailability() {
 
   return {
     staffAvailability,
+    currentStaff,
     isLoading,
     toggleAvailability,
     refetch: fetchAvailability,
