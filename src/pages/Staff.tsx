@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStaff } from '@/hooks/useStaff';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Pencil, Trash2, Users, Loader2, Link, Unlink } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Users, Loader2, Link, Unlink, ShieldAlert } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface StaffFormData {
@@ -22,6 +23,7 @@ interface StaffFormData {
 const Staff = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
+  const { role, isManager, isLoading: roleLoading } = useUserRole();
   const { staff, isLoading, addStaff, updateStaff, deleteStaff, linkUserToStaff, unlinkUserFromStaff } = useStaff();
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -35,6 +37,29 @@ const Staff = () => {
   if (!authLoading && !user) {
     navigate('/auth');
     return null;
+  }
+
+  // Check if user has permission (admin or manager)
+  if (!authLoading && !roleLoading && !isManager) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md mx-4">
+          <CardContent className="pt-6 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldAlert className="h-8 w-8 text-destructive" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Không có quyền truy cập</h2>
+            <p className="text-muted-foreground">
+              Chỉ Admin hoặc Quản lý mới có thể truy cập trang này.
+            </p>
+            <Button onClick={() => navigate('/')} className="mt-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Về trang chủ
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const handleSubmit = async () => {
@@ -114,7 +139,7 @@ const Staff = () => {
     setFormData({ name: '', email: '', phone: '' });
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading || isLoading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
