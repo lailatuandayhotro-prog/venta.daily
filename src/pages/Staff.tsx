@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStaff } from '@/hooks/useStaff';
@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Pencil, Trash2, Users, Loader2, Link, Unlink, ShieldAlert } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StaffFormData {
   name: string;
@@ -20,15 +22,56 @@ interface StaffFormData {
   phone: string;
 }
 
+interface UserAccount {
+  id: string;
+  email: string;
+  role: string | null;
+}
+
 const Staff = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { role, isManager, isLoading: roleLoading } = useUserRole();
+  const { role, isManager, isAdmin, isLoading: roleLoading } = useUserRole();
   const { staff, isLoading, addStaff, updateStaff, deleteStaff, linkUserToStaff, unlinkUserFromStaff } = useStaff();
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [formData, setFormData] = useState<StaffFormData>({ name: '', email: '', phone: '' });
   const [submitting, setSubmitting] = useState(false);
+  
+  // For linking dialog
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkingStaffId, setLinkingStaffId] = useState<string | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<UserAccount[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Fetch available users (staff role only, not already linked)
+  const fetchAvailableUsers = async () => {
+    setLoadingUsers(true);
+    
+    // Get all user roles
+    const { data: rolesData } = await supabase
+      .from('user_roles')
+      .select('user_id, role');
+    
+    if (rolesData) {
+      // Get linked user_ids from staff
+      const linkedUserIds = staff.filter(s => s.user_id).map(s => s.user_id);
+      
+      // Filter to only staff role users who are not already linked
+      const staffRoleUsers = rolesData
+        .filter(r => r.role === 'staff' && !linkedUserIds.includes(r.user_id))
+        .map(r => ({
+          id: r.user_id,
+          email: '', // Will try to get from staff table
+          role: r.role,
+        }));
+      
+      setAvailableUsers(staffRoleUsers);
+    }
+    
+    setLoadingUsers(false);
+  };
 
   // Check if current user is already linked to a staff
   const currentUserStaff = staff.find(s => s.user_id === user?.id);
@@ -103,24 +146,27 @@ const Staff = () => {
     toast({ title: s.is_active ? 'Đã vô hiệu hóa' : 'Đã kích hoạt' });
   };
 
-  const handleLinkAccount = async (staffId: string) => {
-    if (!user) return;
-    
-    // Check if user is already linked to another staff
-    if (currentUserStaff && currentUserStaff.id !== staffId) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Lỗi', 
-        description: `Tài khoản của bạn đã được liên kết với nhân viên "${currentUserStaff.name}"` 
-      });
+  const handleOpenLinkDialog = async (staffId: string) => {
+    setLinkingStaffId(staffId);
+    setSelectedUserId('');
+    await fetchAvailableUsers();
+    setLinkDialogOpen(true);
+  };
+
+  const handleLinkAccount = async () => {
+    if (!linkingStaffId || !selectedUserId) {
+      toast({ variant: 'destructive', title: 'Lỗi', description: 'Vui lòng chọn tài khoản' });
       return;
     }
 
-    const { error } = await linkUserToStaff(staffId, user.id);
+    const { error } = await linkUserToStaff(linkingStaffId, selectedUserId);
     if (error) {
       toast({ variant: 'destructive', title: 'Lỗi', description: 'Không thể liên kết tài khoản' });
     } else {
-      toast({ title: 'Đã liên kết tài khoản với nhân viên này' });
+      toast({ title: 'Đã liên kết tài khoản với nhân viên' });
+      setLinkDialogOpen(false);
+      setLinkingStaffId(null);
+      setSelectedUserId('');
     }
   };
 
@@ -225,20 +271,6 @@ const Staff = () => {
         </div>
       </header>
 
-      {/* Current user link status */}
-      {currentUserStaff && (
-        <div className="container py-4">
-          <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 flex items-center gap-3">
-            <Link className="h-5 w-5 text-primary" />
-            <div className="flex-1">
-              <p className="font-medium text-foreground">
-                Tài khoản của bạn đã liên kết với: <span className="text-primary">{currentUserStaff.name}</span>
-              </p>
-              <p className="text-sm text-muted-foreground">Bạn có thể đăng ký lịch trống tại trang chủ</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Content */}
       <main className="container py-6">
@@ -274,22 +306,19 @@ const Staff = () => {
                             <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                               Đã liên kết
                             </Badge>
-                            {s.user_id === user?.id && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleUnlinkAccount(s.id)}
-                              >
-                                <Unlink className="h-4 w-4" />
-                              </Button>
-                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleUnlinkAccount(s.id)}
+                            >
+                              <Unlink className="h-4 w-4" />
+                            </Button>
                           </div>
                         ) : (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleLinkAccount(s.id)}
-                            disabled={!!currentUserStaff}
+                            onClick={() => handleOpenLinkDialog(s.id)}
                           >
                             <Link className="h-4 w-4 mr-1" />
                             Liên kết
@@ -320,6 +349,57 @@ const Staff = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Link Account Dialog */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Liên kết tài khoản</DialogTitle>
+            <DialogDescription>
+              Chọn tài khoản nhân viên để liên kết với {staff.find(s => s.id === linkingStaffId)?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {loadingUsers ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : availableUsers.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                Không có tài khoản nhân viên nào chưa được liên kết
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <Label>Chọn tài khoản</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn tài khoản nhân viên..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableUsers.map(u => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.id.slice(0, 8)}... (Nhân viên)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="flex gap-2 pt-4">
+              <Button variant="outline" className="flex-1" onClick={() => setLinkDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button 
+                className="flex-1 gradient-primary text-primary-foreground" 
+                onClick={handleLinkAccount}
+                disabled={!selectedUserId || loadingUsers}
+              >
+                Liên kết
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
