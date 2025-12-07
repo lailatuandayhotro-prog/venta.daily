@@ -85,46 +85,45 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
           </tr>
         </thead>
         <tbody>
-          {Object.entries(groupedByStaff).map(([staffName, tasks]) => (
+          {Object.entries(groupedByStaff).map(([staffName, tasks], groupIdx) => (
             tasks.map((task, taskIdx) => {
               const typeConfig = SESSION_TYPE_CONFIG[task.sessionType];
               const TypeIcon = typeConfig.icon;
               const isFirstRow = taskIdx === 0;
+              const isEvenGroup = groupIdx % 2 === 0;
               
               return (
                 <tr 
                   key={`${task.sessionId}-${task.staffName}-${taskIdx}`}
-                  className={`border-b border-border/50 hover:bg-muted/50 transition-colors animate-fade-in ${
-                    isFirstRow && taskIdx === 0 ? 'border-t border-border' : ''
-                  }`}
+                  className={`transition-colors animate-fade-in ${
+                    isEvenGroup ? 'bg-background' : 'bg-muted/30'
+                  } hover:bg-muted/50`}
                 >
-                  <td className="py-4 px-4">
+                  <td className={`py-4 px-4 ${isFirstRow ? 'border-t border-border/50' : ''}`}>
                     {isFirstRow ? (
-                      <span className="font-medium text-foreground">{staffName}</span>
-                    ) : (
-                      <span className="text-transparent">-</span>
-                    )}
+                      <span className="font-semibold text-foreground">{staffName}</span>
+                    ) : null}
                   </td>
-                  <td className="py-4 px-4">
+                  <td className={`py-4 px-4 ${isFirstRow ? 'border-t border-border/50' : ''}`}>
                     <Badge variant="secondary" className={typeConfig.color}>
                       <TypeIcon className="h-3 w-3 mr-1" />
                       {typeConfig.label}
                     </Badge>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className={`py-4 px-4 ${isFirstRow ? 'border-t border-border/50' : ''}`}>
                     <span className="text-foreground">{task.productCategory}</span>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className={`py-4 px-4 ${isFirstRow ? 'border-t border-border/50' : ''}`}>
                     <Badge variant="outline">
                       {TIME_SLOT_LABELS[task.timeSlot]}
                     </Badge>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className={`py-4 px-4 ${isFirstRow ? 'border-t border-border/50' : ''}`}>
                     <span className="text-muted-foreground text-sm">
                       {task.notes || '-'}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-right">
+                  <td className={`py-4 px-4 text-right ${isFirstRow ? 'border-t border-border/50' : ''}`}>
                     <div className="flex justify-end gap-1">
                       <Button 
                         variant="ghost" 
