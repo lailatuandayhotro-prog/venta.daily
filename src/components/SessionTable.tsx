@@ -45,13 +45,22 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
     }))
   );
 
-  // Sort by time slot, then by staff name
+  // Sort by staff name first, then by time slot
   const sortedTasks = flattenedTasks.sort((a, b) => {
+    const nameCompare = a.staffName.localeCompare(b.staffName);
+    if (nameCompare !== 0) return nameCompare;
     const timeOrder = { 'sáng': 0, 'chiều': 1, 'tối': 2 };
-    const timeCompare = timeOrder[a.timeSlot] - timeOrder[b.timeSlot];
-    if (timeCompare !== 0) return timeCompare;
-    return a.staffName.localeCompare(b.staffName);
+    return timeOrder[a.timeSlot] - timeOrder[b.timeSlot];
   });
+
+  // Group tasks by staff name
+  const groupedByStaff = sortedTasks.reduce((acc, task) => {
+    if (!acc[task.staffName]) {
+      acc[task.staffName] = [];
+    }
+    acc[task.staffName].push(task);
+    return acc;
+  }, {} as Record<string, FlattenedTask[]>);
 
   if (sortedTasks.length === 0) {
     return (
@@ -76,61 +85,69 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
           </tr>
         </thead>
         <tbody>
-          {sortedTasks.map((task, idx) => {
-            const typeConfig = SESSION_TYPE_CONFIG[task.sessionType];
-            const TypeIcon = typeConfig.icon;
-            
-            return (
-              <tr 
-                key={`${task.sessionId}-${task.staffName}`}
-                className="border-b border-border/50 hover:bg-muted/50 transition-colors animate-fade-in"
-                style={{ animationDelay: `${idx * 30}ms` }}
-              >
-                <td className="py-4 px-4">
-                  <span className="font-medium text-foreground">{task.staffName}</span>
-                </td>
-                <td className="py-4 px-4">
-                  <Badge variant="secondary" className={typeConfig.color}>
-                    <TypeIcon className="h-3 w-3 mr-1" />
-                    {typeConfig.label}
-                  </Badge>
-                </td>
-                <td className="py-4 px-4">
-                  <span className="text-foreground">{task.productCategory}</span>
-                </td>
-                <td className="py-4 px-4">
-                  <Badge variant="outline">
-                    {TIME_SLOT_LABELS[task.timeSlot]}
-                  </Badge>
-                </td>
-                <td className="py-4 px-4">
-                  <span className="text-muted-foreground text-sm">
-                    {task.notes || '-'}
-                  </span>
-                </td>
-                <td className="py-4 px-4 text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => onEdit(task.session)}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => onDelete(task.sessionId)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+          {Object.entries(groupedByStaff).map(([staffName, tasks]) => (
+            tasks.map((task, taskIdx) => {
+              const typeConfig = SESSION_TYPE_CONFIG[task.sessionType];
+              const TypeIcon = typeConfig.icon;
+              const isFirstRow = taskIdx === 0;
+              
+              return (
+                <tr 
+                  key={`${task.sessionId}-${task.staffName}-${taskIdx}`}
+                  className={`border-b border-border/50 hover:bg-muted/50 transition-colors animate-fade-in ${
+                    isFirstRow && taskIdx === 0 ? 'border-t border-border' : ''
+                  }`}
+                >
+                  <td className="py-4 px-4">
+                    {isFirstRow ? (
+                      <span className="font-medium text-foreground">{staffName}</span>
+                    ) : (
+                      <span className="text-transparent">-</span>
+                    )}
+                  </td>
+                  <td className="py-4 px-4">
+                    <Badge variant="secondary" className={typeConfig.color}>
+                      <TypeIcon className="h-3 w-3 mr-1" />
+                      {typeConfig.label}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className="text-foreground">{task.productCategory}</span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <Badge variant="outline">
+                      {TIME_SLOT_LABELS[task.timeSlot]}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className="text-muted-foreground text-sm">
+                      {task.notes || '-'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => onEdit(task.session)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => onDelete(task.sessionId)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          ))}
         </tbody>
       </table>
     </div>
