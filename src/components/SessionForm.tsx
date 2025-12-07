@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WorkSession } from '@/hooks/useWorkSessions';
 import { useStaff } from '@/hooks/useStaff';
+import { useProducts } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,16 +25,6 @@ const SESSION_TYPE_LABELS: Record<SessionType, string> = {
   video: 'Quay video',
   event: 'Sự kiện',
 };
-
-const PRODUCT_CATEGORIES = [
-  'Nước hoa',
-  'Quần áo',
-  'Rong biển',
-  'Mỹ phẩm',
-  'Phụ kiện',
-  'Thực phẩm',
-  'Khác',
-];
 
 interface TaskItem {
   id: string;
@@ -61,11 +52,15 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export function SessionForm({ open, onOpenChange, onSubmit, editSession, defaultDate }: SessionFormProps) {
   const { activeStaff } = useStaff();
+  const { activeProducts } = useProducts();
   const [date, setDate] = useState(defaultDate || format(new Date(), 'yyyy-MM-dd'));
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('chiều');
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  
+  const getDefaultProduct = () => activeProducts.length > 0 ? activeProducts[0].name : '';
+  
   const [tasks, setTasks] = useState<TaskItem[]>([
-    { id: generateId(), session_type: 'livestream', product_category: PRODUCT_CATEGORIES[0], notes: '' }
+    { id: generateId(), session_type: 'livestream', product_category: '', notes: '' }
   ]);
 
   useEffect(() => {
@@ -94,7 +89,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
     setDate(defaultDate || format(new Date(), 'yyyy-MM-dd'));
     setTimeSlot('chiều');
     setSelectedStaffIds([]);
-    setTasks([{ id: generateId(), session_type: 'livestream', product_category: PRODUCT_CATEGORIES[0], notes: '' }]);
+    setTasks([{ id: generateId(), session_type: 'livestream', product_category: getDefaultProduct(), notes: '' }]);
   };
 
   const toggleStaff = (id: string) => {
@@ -109,7 +104,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
     setTasks(prev => [...prev, { 
       id: generateId(), 
       session_type: 'livestream', 
-      product_category: PRODUCT_CATEGORIES[0], 
+      product_category: getDefaultProduct(), 
       notes: '' 
     }]);
   };
@@ -268,8 +263,8 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {PRODUCT_CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          {activeProducts.map((product) => (
+                            <SelectItem key={product.id} value={product.name}>{product.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
