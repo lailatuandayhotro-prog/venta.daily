@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList, Calendar, History, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList, Calendar, History, ChevronLeft, ChevronRight, CalendarDays, Package } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -148,6 +148,15 @@ const Index = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
+              {role === 'admin' && (
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/products')}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Sản phẩm
+                </Button>
+              )}
               <Button 
                 variant="outline"
                 onClick={() => navigate('/staff')}
