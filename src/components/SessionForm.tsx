@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
+import { Plus, Trash2 } from 'lucide-react';
 
 type TimeSlot = 'sáng' | 'chiều' | 'tối';
 type SessionType = 'livestream' | 'video' | 'event';
@@ -34,6 +35,13 @@ const PRODUCT_CATEGORIES = [
   'Khác',
 ];
 
+interface TaskItem {
+  id: string;
+  session_type: SessionType;
+  product_category: string;
+  notes: string;
+}
+
 interface SessionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,23 +57,28 @@ interface SessionFormProps {
   defaultDate?: string;
 }
 
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
 export function SessionForm({ open, onOpenChange, onSubmit, editSession, defaultDate }: SessionFormProps) {
   const { activeStaff } = useStaff();
   const [date, setDate] = useState(defaultDate || format(new Date(), 'yyyy-MM-dd'));
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('chiều');
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
-  const [productCategory, setProductCategory] = useState(PRODUCT_CATEGORIES[0]);
-  const [sessionType, setSessionType] = useState<SessionType>('livestream');
-  const [notes, setNotes] = useState('');
+  const [tasks, setTasks] = useState<TaskItem[]>([
+    { id: generateId(), session_type: 'livestream', product_category: PRODUCT_CATEGORIES[0], notes: '' }
+  ]);
 
   useEffect(() => {
     if (editSession) {
       setDate(editSession.date);
       setTimeSlot(editSession.time_slot);
       setSelectedStaffIds(editSession.staff_ids);
-      setProductCategory(editSession.product_category);
-      setSessionType(editSession.session_type);
-      setNotes(editSession.notes || '');
+      setTasks([{
+        id: generateId(),
+        session_type: editSession.session_type,
+        product_category: editSession.product_category,
+        notes: editSession.notes || ''
+      }]);
     } else {
       resetForm();
     }
@@ -81,9 +94,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
     setDate(defaultDate || format(new Date(), 'yyyy-MM-dd'));
     setTimeSlot('chiều');
     setSelectedStaffIds([]);
-    setProductCategory(PRODUCT_CATEGORIES[0]);
-    setSessionType('livestream');
-    setNotes('');
+    setTasks([{ id: generateId(), session_type: 'livestream', product_category: PRODUCT_CATEGORIES[0], notes: '' }]);
   };
 
   const toggleStaff = (id: string) => {
@@ -94,26 +105,52 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const addTask = () => {
+    setTasks(prev => [...prev, { 
+      id: generateId(), 
+      session_type: 'livestream', 
+      product_category: PRODUCT_CATEGORIES[0], 
+      notes: '' 
+    }]);
+  };
+
+  const removeTask = (id: string) => {
+    if (tasks.length > 1) {
+      setTasks(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
+  const updateTask = (id: string, field: keyof TaskItem, value: string) => {
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, [field]: value } : t
+    ));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedStaffIds.length === 0) return;
 
-    onSubmit({
-      date,
-      time_slot: timeSlot,
-      staff_ids: selectedStaffIds,
-      product_category: productCategory,
-      session_type: sessionType,
-      notes: notes.trim() || undefined,
-    });
+    // Submit each task separately
+    for (const task of tasks) {
+      await onSubmit({
+        date,
+        time_slot: timeSlot,
+        staff_ids: selectedStaffIds,
+        product_category: task.product_category,
+        session_type: task.session_type,
+        notes: task.notes.trim() || undefined,
+      });
+    }
 
     resetForm();
     onOpenChange(false);
   };
 
+  const isEditMode = !!editSession;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {editSession ? 'Chỉnh sửa task' : 'Phân công task mới'}
@@ -174,44 +211,83 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Loại phiên</Label>
-              <Select value={sessionType} onValueChange={(v) => setSessionType(v as SessionType)}>
-                <SelectTrigger className="bg-muted/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(SESSION_TYPE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Task List */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Danh sách công việc</Label>
+              {!isEditMode && (
+                <Button type="button" variant="outline" size="sm" onClick={addTask} className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  Thêm task
+                </Button>
+              )}
             </div>
-            <div className="space-y-2">
-              <Label>Sản phẩm</Label>
-              <Select value={productCategory} onValueChange={setProductCategory}>
-                <SelectTrigger className="bg-muted/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            <div className="space-y-3">
+              {tasks.map((task, index) => (
+                <div key={task.id} className="p-3 bg-muted/30 rounded-lg border border-border/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Task {index + 1}</span>
+                    {tasks.length > 1 && !isEditMode && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeTask(task.id)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Loại phiên</Label>
+                      <Select 
+                        value={task.session_type} 
+                        onValueChange={(v) => updateTask(task.id, 'session_type', v)}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(SESSION_TYPE_LABELS).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Sản phẩm</Label>
+                      <Select 
+                        value={task.product_category} 
+                        onValueChange={(v) => updateTask(task.id, 'product_category', v)}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRODUCT_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Ghi chú</Label>
+                    <Input
+                      value={task.notes}
+                      onChange={(e) => updateTask(task.id, 'notes', e.target.value)}
+                      placeholder="VD: 19h-22h, số lượng 3..."
+                      className="bg-background"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Ghi chú (tùy chọn)</Label>
-            <Input
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Thêm ghi chú..."
-              className="bg-muted/50"
-            />
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -223,7 +299,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
               disabled={selectedStaffIds.length === 0}
               className="gradient-primary text-primary-foreground font-semibold"
             >
-              {editSession ? 'Cập nhật' : 'Phân công'}
+              {editSession ? 'Cập nhật' : `Phân công ${tasks.length > 1 ? `(${tasks.length} tasks)` : ''}`}
             </Button>
           </DialogFooter>
         </form>
