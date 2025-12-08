@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkSessions, WorkSession } from '@/hooks/useWorkSessions';
 import { SessionTable } from '@/components/SessionTable';
+import { useMemo as useMemoReact } from 'react';
 import { SessionForm } from '@/components/SessionForm';
 import { StatsCards } from '@/components/StatsCards';
 import { TodaySchedule } from '@/components/TodaySchedule';
@@ -20,7 +21,7 @@ import { vi } from 'date-fns/locale';
 const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, signOut } = useAuth();
-  const { role, isLoading: roleLoading, getRoleLabel } = useUserRole();
+  const { role, isLoading: roleLoading, getRoleLabel, isManager } = useUserRole();
   const { sessions, isLoading, addSession, updateSession, deleteSession } = useWorkSessions();
   const [formOpen, setFormOpen] = useState(false);
   const [editSession, setEditSession] = useState<WorkSession | null>(null);
@@ -171,13 +172,15 @@ const Index = () => {
                 <ClipboardList className="h-4 w-4 mr-2" />
                 Chấm công
               </Button>
-              <Button 
-                onClick={() => setFormOpen(true)}
-                className="gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Phân công
-              </Button>
+              {isManager && (
+                <Button 
+                  onClick={() => setFormOpen(true)}
+                  className="gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Phân công
+                </Button>
+              )}
               <Button 
                 variant="ghost"
                 size="icon"
@@ -283,6 +286,7 @@ const Index = () => {
                   sessions={filteredSessions} 
                   onDelete={handleDelete}
                   onEdit={handleEdit}
+                  canManage={isManager}
                 />
               )}
             </div>
