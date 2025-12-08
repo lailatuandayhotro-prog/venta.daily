@@ -31,6 +31,7 @@ interface TaskItem {
   session_type: SessionType;
   product_category: string;
   notes: string;
+  duration_hours: string;
 }
 
 interface SessionFormProps {
@@ -42,6 +43,7 @@ interface SessionFormProps {
     product_category: string;
     session_type: SessionType;
     notes?: string;
+    duration_hours?: number;
     staff_ids: string[];
   }) => void;
   editSession?: WorkSession | null;
@@ -60,7 +62,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
   const getDefaultProduct = () => activeProducts.length > 0 ? activeProducts[0].name : '';
   
   const [tasks, setTasks] = useState<TaskItem[]>([
-    { id: generateId(), session_type: 'livestream', product_category: '', notes: '' }
+    { id: generateId(), session_type: 'livestream', product_category: '', notes: '', duration_hours: '' }
   ]);
 
   useEffect(() => {
@@ -72,7 +74,8 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
         id: generateId(),
         session_type: editSession.session_type,
         product_category: editSession.product_category,
-        notes: editSession.notes || ''
+        notes: editSession.notes || '',
+        duration_hours: editSession.duration_hours?.toString() || ''
       }]);
     } else {
       resetForm();
@@ -89,7 +92,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
     setDate(defaultDate || format(new Date(), 'yyyy-MM-dd'));
     setTimeSlot('chiều');
     setSelectedStaffIds([]);
-    setTasks([{ id: generateId(), session_type: 'livestream', product_category: getDefaultProduct(), notes: '' }]);
+    setTasks([{ id: generateId(), session_type: 'livestream', product_category: getDefaultProduct(), notes: '', duration_hours: '' }]);
   };
 
   const toggleStaff = (id: string) => {
@@ -105,7 +108,8 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
       id: generateId(), 
       session_type: 'livestream', 
       product_category: getDefaultProduct(), 
-      notes: '' 
+      notes: '',
+      duration_hours: ''
     }]);
   };
 
@@ -127,6 +131,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
 
     // Submit each task separately
     for (const task of tasks) {
+      const durationValue = task.duration_hours ? parseFloat(task.duration_hours) : undefined;
       await onSubmit({
         date,
         time_slot: timeSlot,
@@ -134,6 +139,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
         product_category: task.product_category,
         session_type: task.session_type,
         notes: task.notes.trim() || undefined,
+        duration_hours: task.session_type === 'livestream' ? durationValue : undefined,
       });
     }
 
@@ -270,6 +276,22 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
                       </Select>
                     </div>
                   </div>
+                  
+                  {/* Duration field - only show for livestream */}
+                  {task.session_type === 'livestream' && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Số giờ live</Label>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        value={task.duration_hours}
+                        onChange={(e) => updateTask(task.id, 'duration_hours', e.target.value)}
+                        placeholder="VD: 2, 2.5, 3..."
+                        className="bg-background"
+                      />
+                    </div>
+                  )}
                   
                   <div className="space-y-1">
                     <Label className="text-xs">Ghi chú</Label>
