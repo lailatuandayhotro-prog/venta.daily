@@ -19,6 +19,7 @@ interface SessionTableProps {
   sessions: WorkSession[];
   onDelete: (id: string) => void;
   onEdit: (session: WorkSession) => void;
+  canManage?: boolean;
 }
 
 interface FlattenedTask {
@@ -31,7 +32,7 @@ interface FlattenedTask {
   session: WorkSession;
 }
 
-export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) {
+export function SessionTable({ sessions, onDelete, onEdit, canManage = false }: SessionTableProps) {
   // Flatten sessions to show one row per employee-task
   const flattenedTasks: FlattenedTask[] = sessions.flatMap(session => 
     session.staff_names.map(staffName => ({
@@ -81,7 +82,7 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
             <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-sm uppercase tracking-wider">Sản phẩm</th>
             <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-sm uppercase tracking-wider">Ca</th>
             <th className="text-left py-3 px-4 font-semibold text-muted-foreground text-sm uppercase tracking-wider">Ghi chú</th>
-            <th className="text-right py-3 px-4 font-semibold text-muted-foreground text-sm uppercase tracking-wider"></th>
+            {canManage && <th className="text-right py-3 px-4 font-semibold text-muted-foreground text-sm uppercase tracking-wider"></th>}
           </tr>
         </thead>
         <tbody>
@@ -123,26 +124,28 @@ export function SessionTable({ sessions, onDelete, onEdit }: SessionTableProps) 
                       {task.notes || '-'}
                     </span>
                   </td>
-                  <td className={`py-4 px-4 text-right ${isFirstRow ? 'border-t border-border/50' : ''}`}>
-                    <div className="flex justify-end gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={() => onEdit(task.session)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => onDelete(task.sessionId)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
+                  {canManage && (
+                    <td className={`py-4 px-4 text-right ${isFirstRow ? 'border-t border-border/50' : ''}`}>
+                      <div className="flex justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => onEdit(task.session)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => onDelete(task.sessionId)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })
