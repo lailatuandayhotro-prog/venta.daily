@@ -8,6 +8,7 @@ export interface WorkSession {
   product_category: string;
   session_type: 'livestream' | 'video' | 'event';
   notes: string | null;
+  duration_hours: number | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -41,6 +42,7 @@ export function useWorkSessions() {
         product_category: s.product_category,
         session_type: s.session_type,
         notes: s.notes,
+        duration_hours: s.duration_hours,
         created_by: s.created_by,
         created_at: s.created_at,
         updated_at: s.updated_at,
@@ -62,6 +64,7 @@ export function useWorkSessions() {
     product_category: string;
     session_type: 'livestream' | 'video' | 'event';
     notes?: string;
+    duration_hours?: number;
     staff_ids: string[];
   }) => {
     const { staff_ids, ...sessionFields } = sessionData;
@@ -101,6 +104,7 @@ export function useWorkSessions() {
       product_category?: string;
       session_type?: 'livestream' | 'video' | 'event';
       notes?: string;
+      duration_hours?: number | null;
       staff_ids?: string[];
     }
   ) => {

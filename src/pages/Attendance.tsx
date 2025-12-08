@@ -65,7 +65,8 @@ const Attendance = () => {
         return inDateRange && isAssigned;
       });
 
-      const livestreamCount = memberSessions.filter(s => s.session_type === 'livestream').length;
+      const livestreamSessions = memberSessions.filter(s => s.session_type === 'livestream');
+      const livestreamHours = livestreamSessions.reduce((sum, s) => sum + (s.duration_hours || 0), 0);
       const videoCount = memberSessions.filter(s => s.session_type === 'video').length;
       const eventCount = memberSessions.filter(s => s.session_type === 'event').length;
       const totalTasks = memberSessions.length;
@@ -77,7 +78,7 @@ const Attendance = () => {
         id: member.id,
         name: member.name,
         isActive: member.is_active,
-        livestreamCount,
+        livestreamHours,
         videoCount,
         eventCount,
         totalTasks,
@@ -88,11 +89,11 @@ const Attendance = () => {
 
   const totals = useMemo(() => {
     return attendanceData.reduce((acc, curr) => ({
-      livestream: acc.livestream + curr.livestreamCount,
+      livestreamHours: acc.livestreamHours + curr.livestreamHours,
       video: acc.video + curr.videoCount,
       event: acc.event + curr.eventCount,
       total: acc.total + curr.totalTasks,
-    }), { livestream: 0, video: 0, event: 0, total: 0 });
+    }), { livestreamHours: 0, video: 0, event: 0, total: 0 });
   }, [attendanceData]);
 
   if (authLoading || !user) {
@@ -191,8 +192,8 @@ const Attendance = () => {
                   <Tv className="h-4 w-4 text-red-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{totals.livestream}</p>
-                  <p className="text-xs text-muted-foreground">Ca Live</p>
+                  <p className="text-2xl font-bold">{totals.livestreamHours}h</p>
+                  <p className="text-xs text-muted-foreground">Giờ Live</p>
                 </div>
               </div>
             </CardContent>
@@ -248,7 +249,7 @@ const Attendance = () => {
                     <TableHead className="text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Tv className="h-4 w-4 text-red-500" />
-                        Live
+                        Giờ Live
                       </div>
                     </TableHead>
                     <TableHead className="text-center">
@@ -283,9 +284,9 @@ const Attendance = () => {
                         {row.workDays}
                       </TableCell>
                       <TableCell className="text-center">
-                        {row.livestreamCount > 0 ? (
+                        {row.livestreamHours > 0 ? (
                           <Badge variant="secondary" className="bg-red-500/10 text-red-600">
-                            {row.livestreamCount}
+                            {row.livestreamHours}h
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground">-</span>

@@ -165,6 +165,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           date: string
+          duration_hours: number | null
           id: string
           notes: string | null
           product_category: string
@@ -176,6 +177,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date: string
+          duration_hours?: number | null
           id?: string
           notes?: string | null
           product_category: string
@@ -187,6 +189,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           date?: string
+          duration_hours?: number | null
           id?: string
           notes?: string | null
           product_category?: string
