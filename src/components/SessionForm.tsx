@@ -151,29 +151,29 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="text-lg sm:text-xl font-semibold">
             {editSession ? 'Chỉnh sửa task' : 'Phân công task mới'}
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-5 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Ngày</Label>
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 py-2 sm:py-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="date" className="text-sm">Ngày</Label>
               <Input
                 id="date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="bg-muted/50"
+                className="bg-muted/50 h-10"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="timeSlot">Buổi</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="timeSlot" className="text-sm">Buổi</Label>
               <Select value={timeSlot} onValueChange={(v) => setTimeSlot(v as TimeSlot)}>
-                <SelectTrigger className="bg-muted/50">
+                <SelectTrigger className="bg-muted/50 h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -185,16 +185,16 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Nhân viên</Label>
-            <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label className="text-sm">Nhân viên</Label>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-muted/50 rounded-lg max-h-32 overflow-y-auto">
               {activeStaff.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Chưa có nhân viên. Vui lòng thêm nhân viên trước.</p>
+                <p className="text-muted-foreground text-xs sm:text-sm">Chưa có nhân viên. Vui lòng thêm nhân viên trước.</p>
               ) : (
                 activeStaff.map((staff) => (
                   <label
                     key={staff.id}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-all ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md cursor-pointer transition-all text-xs sm:text-sm ${
                       selectedStaffIds.includes(staff.id)
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-background hover:bg-muted'
@@ -205,7 +205,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
                       onCheckedChange={() => toggleStaff(staff.id)}
                       className="hidden"
                     />
-                    <span className="font-medium text-sm">{staff.name}</span>
+                    <span className="font-medium">{staff.name}</span>
                   </label>
                 ))
               )}
@@ -213,43 +213,43 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
           </div>
 
           {/* Task List */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Danh sách công việc</Label>
+              <Label className="text-sm">Danh sách công việc</Label>
               {!isEditMode && (
-                <Button type="button" variant="outline" size="sm" onClick={addTask} className="gap-1">
-                  <Plus className="h-4 w-4" />
+                <Button type="button" variant="outline" size="sm" onClick={addTask} className="gap-1 h-8 text-xs sm:text-sm">
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Thêm task
                 </Button>
               )}
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {tasks.map((task, index) => (
-                <div key={task.id} className="p-3 bg-muted/30 rounded-lg border border-border/50 space-y-3">
+                <div key={task.id} className="p-2.5 sm:p-3 bg-muted/30 rounded-lg border border-border/50 space-y-2.5 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">Task {index + 1}</span>
+                    <span className="text-xs sm:text-sm font-medium text-muted-foreground">Task {index + 1}</span>
                     {tasks.length > 1 && !isEditMode && (
                       <Button 
                         type="button" 
                         variant="ghost" 
                         size="sm" 
                         onClick={() => removeTask(task.id)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">Loại phiên</Label>
                       <Select 
                         value={task.session_type} 
                         onValueChange={(v) => updateTask(task.id, 'session_type', v)}
                       >
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-background h-9 text-xs sm:text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -265,7 +265,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
                         value={task.product_category} 
                         onValueChange={(v) => updateTask(task.id, 'product_category', v)}
                       >
-                        <SelectTrigger className="bg-background">
+                        <SelectTrigger className="bg-background h-9 text-xs sm:text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -288,7 +288,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
                         value={task.duration_hours}
                         onChange={(e) => updateTask(task.id, 'duration_hours', e.target.value)}
                         placeholder="VD: 2, 2.5, 3..."
-                        className="bg-background"
+                        className="bg-background h-9 text-sm"
                       />
                     </div>
                   )}
@@ -299,7 +299,7 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
                       value={task.notes}
                       onChange={(e) => updateTask(task.id, 'notes', e.target.value)}
                       placeholder="VD: 19h-22h, số lượng 3..."
-                      className="bg-background"
+                      className="bg-background h-9 text-sm"
                     />
                   </div>
                 </div>
@@ -307,14 +307,14 @@ export function SessionForm({ open, onOpenChange, onSubmit, editSession, default
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
               Hủy
             </Button>
             <Button 
               type="submit" 
               disabled={selectedStaffIds.length === 0}
-              className="gradient-primary text-primary-foreground font-semibold"
+              className="gradient-primary text-primary-foreground font-semibold w-full sm:w-auto"
             >
               {editSession ? 'Cập nhật' : `Phân công ${tasks.length > 1 ? `(${tasks.length} tasks)` : ''}`}
             </Button>

@@ -39,20 +39,20 @@ export function StatsCards({ sessions }: StatsCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
       {stats.map((stat, idx) => (
         <div 
           key={stat.label}
-          className="bg-card rounded-xl p-4 shadow-soft border border-border/50 animate-slide-up"
+          className="bg-card rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-soft border border-border/50 animate-slide-up"
           style={{ animationDelay: `${idx * 50}ms` }}
         >
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-lg ${stat.color}`}>
-              <stat.icon className="h-5 w-5" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className={`p-2 sm:p-2.5 rounded-lg ${stat.color}`}>
+              <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
             </div>
           </div>
         </div>

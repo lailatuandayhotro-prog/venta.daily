@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useWorkSessions, WorkSession } from '@/hooks/useWorkSessions';
 import { SessionTable } from '@/components/SessionTable';
-import { useMemo as useMemoReact } from 'react';
 import { SessionForm } from '@/components/SessionForm';
 import { StatsCards } from '@/components/StatsCards';
 import { TodaySchedule } from '@/components/TodaySchedule';
@@ -13,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList, Calendar, History, ChevronLeft, ChevronRight, CalendarDays, Package } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Plus, Radio, Users, LogOut, Loader2, Shield, ClipboardList, Calendar, ChevronLeft, ChevronRight, CalendarDays, Package, Menu } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -127,129 +127,183 @@ const Index = () => {
     );
   }
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="container py-4">
+        <div className="container py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 gradient-primary rounded-xl shadow-glow">
-                <Radio className="h-6 w-6 text-primary-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 gradient-primary rounded-lg sm:rounded-xl shadow-glow">
+                <Radio className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Venta</h1>
-                <p className="text-sm text-muted-foreground">Phân công công việc</p>
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">Venta</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Phân công công việc</p>
               </div>
               {role && !roleLoading && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
                   <Shield className="h-3 w-3 mr-1" />
-                  {getRoleLabel(role)}
+                  <span className="hidden sm:inline">{getRoleLabel(role)}</span>
+                  <span className="sm:hidden">{role === 'admin' ? 'AD' : role === 'manager' ? 'QL' : 'NV'}</span>
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-2">
               {role === 'admin' && (
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/products')}
-                >
+                <Button variant="outline" size="sm" onClick={() => navigate('/products')}>
                   <Package className="h-4 w-4 mr-2" />
                   Sản phẩm
                 </Button>
               )}
-              <Button 
-                variant="outline"
-                onClick={() => navigate('/staff')}
-              >
+              <Button variant="outline" size="sm" onClick={() => navigate('/staff')}>
                 <Users className="h-4 w-4 mr-2" />
                 Nhân viên
               </Button>
-              <Button 
-                variant="outline"
-                onClick={() => navigate('/attendance')}
-              >
+              <Button variant="outline" size="sm" onClick={() => navigate('/attendance')}>
                 <ClipboardList className="h-4 w-4 mr-2" />
                 Chấm công
               </Button>
               {isManager && (
                 <Button 
                   onClick={() => setFormOpen(true)}
+                  size="sm"
                   className="gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-90 transition-opacity"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Phân công
                 </Button>
               )}
-              <Button 
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                title="Đăng xuất"
-              >
+              <Button variant="ghost" size="icon" onClick={handleSignOut} title="Đăng xuất">
                 <LogOut className="h-4 w-4" />
               </Button>
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="flex md:hidden items-center gap-2">
+              {isManager && (
+                <Button 
+                  onClick={() => setFormOpen(true)}
+                  size="sm"
+                  className="gradient-primary text-primary-foreground font-semibold shadow-glow"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+              <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64">
+                  <div className="flex flex-col gap-3 mt-6">
+                    {role === 'admin' && (
+                      <Button 
+                        variant="ghost" 
+                        className="justify-start" 
+                        onClick={() => { navigate('/products'); setMenuOpen(false); }}
+                      >
+                        <Package className="h-4 w-4 mr-3" />
+                        Sản phẩm
+                      </Button>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start"
+                      onClick={() => { navigate('/staff'); setMenuOpen(false); }}
+                    >
+                      <Users className="h-4 w-4 mr-3" />
+                      Nhân viên
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start"
+                      onClick={() => { navigate('/attendance'); setMenuOpen(false); }}
+                    >
+                      <ClipboardList className="h-4 w-4 mr-3" />
+                      Chấm công
+                    </Button>
+                    <div className="border-t border-border my-2" />
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start text-destructive hover:text-destructive"
+                      onClick={() => { handleSignOut(); setMenuOpen(false); }}
+                    >
+                      <LogOut className="h-4 w-4 mr-3" />
+                      Đăng xuất
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container py-6 space-y-6">
+      <main className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6 h-auto">
+            <TabsTrigger value="tasks" className="flex items-center gap-1.5 sm:gap-2 py-2.5 text-xs sm:text-sm">
               <ClipboardList className="h-4 w-4" />
-              Công việc hôm nay
+              <span className="hidden sm:inline">Công việc hôm nay</span>
+              <span className="sm:hidden">Công việc</span>
             </TabsTrigger>
-            <TabsTrigger value="availability" className="flex items-center gap-2">
+            <TabsTrigger value="availability" className="flex items-center gap-1.5 sm:gap-2 py-2.5 text-xs sm:text-sm">
               <CalendarDays className="h-4 w-4" />
-              Lịch trống theo tuần
+              <span className="hidden sm:inline">Lịch trống theo tuần</span>
+              <span className="sm:hidden">Lịch trống</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Tasks */}
-          <TabsContent value="tasks" className="space-y-6">
+          <TabsContent value="tasks" className="space-y-4 sm:space-y-6">
             {/* Today's Available Staff */}
             <div className="bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden">
-              <div className="p-4 border-b border-border">
-                <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <div className="p-3 sm:p-4 border-b border-border">
+                <h2 className="font-semibold text-foreground flex items-center gap-2 text-sm sm:text-base">
                   <Calendar className="h-4 w-4" />
-                  Lịch làm việc của nhân viên hôm nay
+                  <span className="hidden sm:inline">Lịch làm việc của nhân viên hôm nay</span>
+                  <span className="sm:hidden">Nhân viên hôm nay</span>
                 </h2>
               </div>
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <TodaySchedule />
               </div>
             </div>
 
             {/* Date Navigation */}
-            <div className="bg-card rounded-xl shadow-soft border border-border/50 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={goToPrevDay}>
+            <div className="bg-card rounded-xl shadow-soft border border-border/50 p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:justify-between">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                  <Button variant="outline" size="icon" className="h-9 w-9" onClick={goToPrevDay}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="flex items-center gap-2 min-w-[280px] justify-center">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium capitalize">{formatDisplayDate(selectedDate)}</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none sm:min-w-[280px] justify-center">
+                    <Calendar className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                    <span className="font-medium capitalize text-sm sm:text-base">{formatDisplayDate(selectedDate)}</span>
                     {isToday && (
-                      <Badge variant="default" className="ml-2">Hôm nay</Badge>
+                      <Badge variant="default" className="ml-1 sm:ml-2 text-xs">Hôm nay</Badge>
                     )}
                   </div>
                   <Button 
                     variant="outline" 
                     size="icon" 
+                    className="h-9 w-9"
                     onClick={goToNextDay}
                     disabled={isToday}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
                   {!isToday && (
-                    <Button variant="outline" size="sm" onClick={goToToday}>
-                      <History className="h-4 w-4 mr-2" />
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={goToToday}>
                       Về hôm nay
                     </Button>
                   )}
@@ -260,7 +314,7 @@ const Index = () => {
                       setSelectedDate(e.target.value);
                       setViewMode(e.target.value === format(new Date(), 'yyyy-MM-dd') ? 'today' : 'history');
                     }}
-                    className="w-40"
+                    className="w-36 sm:w-40 text-sm"
                   />
                 </div>
               </div>

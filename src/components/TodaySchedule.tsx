@@ -51,7 +51,7 @@ export function TodaySchedule() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {todayAvailableStaff.map(({ timeSlot, staffNames }) => {
         const config = TIME_SLOT_CONFIG[timeSlot];
         const Icon = config.icon;
@@ -59,27 +59,29 @@ export function TodaySchedule() {
         return (
           <div 
             key={timeSlot} 
-            className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-border/50"
+            className="flex items-start gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 border border-border/50"
           >
-            <div className={`p-2 rounded-lg ${config.color}`}>
-              <Icon className="h-5 w-5" />
+            <div className={`p-1.5 sm:p-2 rounded-lg ${config.color} shrink-0`}>
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div className="flex-1">
-              <h4 className="font-medium text-foreground mb-2">{config.label}</h4>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <h4 className="font-medium text-foreground text-sm sm:text-base">{config.label}</h4>
+                <span className="text-xs sm:text-sm text-muted-foreground shrink-0">
+                  {staffNames.length} người
+                </span>
+              </div>
               {staffNames.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {staffNames.map(name => (
-                    <Badge key={name} variant="secondary">
+                    <Badge key={name} variant="secondary" className="text-xs">
                       {name}
                     </Badge>
                   ))}
                 </div>
               ) : (
-                <span className="text-sm text-muted-foreground">Chưa có ai đăng ký</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">Chưa có ai đăng ký</span>
               )}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {staffNames.length} người
             </div>
           </div>
         );
