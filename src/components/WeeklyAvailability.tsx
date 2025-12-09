@@ -40,23 +40,23 @@ export function WeeklyAvailability() {
       {/* Current user's availability section - only show if linked */}
       {currentStaff && (
         <>
-          <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-lg border border-primary/20">
-            <div className="p-2 bg-primary rounded-full">
-              <User className="h-4 w-4 text-primary-foreground" />
+          <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="p-1.5 sm:p-2 bg-primary rounded-full shrink-0">
+              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
             </div>
-            <div>
-              <p className="font-medium text-foreground">{currentStaff.name}</p>
-              <p className="text-sm text-muted-foreground">Đánh dấu các buổi bạn có thể đi làm</p>
+            <div className="min-w-0">
+              <p className="font-medium text-foreground text-sm sm:text-base truncate">{currentStaff.name}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Đánh dấu các buổi bạn có thể đi làm</p>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table className="w-full text-xs sm:text-sm min-w-[400px]">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Buổi</th>
+                  <th className="text-left p-2 sm:p-3 font-medium text-muted-foreground">Buổi</th>
                   {DAYS_OF_WEEK.map(day => (
-                    <th key={day.value} className="p-3 text-center font-medium text-muted-foreground">
+                    <th key={day.value} className="p-2 sm:p-3 text-center font-medium text-muted-foreground">
                       {day.label}
                     </th>
                   ))}
@@ -65,13 +65,13 @@ export function WeeklyAvailability() {
               <tbody>
                 {TIME_SLOTS.map(slot => (
                   <tr key={slot.value} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                    <td className="p-3 font-medium text-foreground">{slot.label}</td>
+                    <td className="p-2 sm:p-3 font-medium text-foreground">{slot.label}</td>
                     {DAYS_OF_WEEK.map(day => (
-                      <td key={`${day.value}-${slot.value}`} className="p-3 text-center">
+                      <td key={`${day.value}-${slot.value}`} className="p-2 sm:p-3 text-center">
                         <Checkbox
                           checked={isAvailable(currentStaff.id, day.value, slot.value)}
                           onCheckedChange={() => toggleAvailability(currentStaff.id, day.value, slot.value)}
-                          className="mx-auto"
+                          className="mx-auto h-4 w-4 sm:h-5 sm:w-5"
                         />
                       </td>
                     ))}
@@ -98,16 +98,16 @@ export function WeeklyAvailability() {
       {/* All staff availability (read-only for others) */}
       {staffAvailability.length > 0 && (
         <div className="mt-4">
-          <h3 className="font-semibold text-foreground mb-4">
+          <h3 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">
             {currentStaff ? 'Lịch của các nhân viên khác' : 'Lịch của tất cả nhân viên'}
           </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table className="w-full text-xs sm:text-sm min-w-[600px]">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Nhân viên</th>
+                  <th className="text-left p-2 sm:p-3 font-medium text-muted-foreground">Nhân viên</th>
                   {DAYS_OF_WEEK.map(day => (
-                    <th key={day.value} className="p-2 text-center font-medium text-muted-foreground" colSpan={3}>
+                    <th key={day.value} className="p-1.5 sm:p-2 text-center font-medium text-muted-foreground" colSpan={3}>
                       {day.label}
                     </th>
                   ))}
@@ -118,9 +118,9 @@ export function WeeklyAvailability() {
                     TIME_SLOTS.map(slot => (
                       <th 
                         key={`${day.value}-${slot.value}`} 
-                        className="p-1 text-center text-xs font-normal text-muted-foreground"
+                        className="p-0.5 sm:p-1 text-center text-[10px] sm:text-xs font-normal text-muted-foreground"
                       >
-                        {slot.label}
+                        {slot.label.charAt(0)}
                       </th>
                     ))
                   ))}
@@ -131,16 +131,16 @@ export function WeeklyAvailability() {
                   .filter(staff => !currentStaff || staff.id !== currentStaff.id)
                   .map(staff => (
                     <tr key={staff.id} className="border-b border-border/50">
-                      <td className="p-3 font-medium text-foreground">{staff.name}</td>
+                      <td className="p-2 sm:p-3 font-medium text-foreground whitespace-nowrap">{staff.name}</td>
                       {DAYS_OF_WEEK.map(day => (
                         TIME_SLOTS.map(slot => (
-                          <td key={`${staff.id}-${day.value}-${slot.value}`} className="p-1 text-center">
+                          <td key={`${staff.id}-${day.value}-${slot.value}`} className="p-0.5 sm:p-1 text-center">
                             {isAvailable(staff.id, day.value, slot.value) ? (
-                              <Badge variant="secondary" className="w-6 h-6 p-0 flex items-center justify-center">
+                              <Badge variant="secondary" className="w-5 h-5 sm:w-6 sm:h-6 p-0 flex items-center justify-center text-[10px] sm:text-xs">
                                 ✓
                               </Badge>
                             ) : (
-                              <span className="text-muted-foreground/30">-</span>
+                              <span className="text-muted-foreground/30 text-[10px] sm:text-xs">-</span>
                             )}
                           </td>
                         ))
